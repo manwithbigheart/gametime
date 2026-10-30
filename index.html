@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>After Hours // Remote Truth or Dare</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&family=Playfair+Display:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Tone.js for subtle UI sound effects -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    },
+                    colors: {
+                        neonPink: '#ff007f',
+                        neonPurple: '#8a2be2',
+                        neonCrimson: '#e11d48',
+                        velvetDark: '#0a0510',
+                        velvetCard: '#160b24'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #07030c;
+            background-image: 
+                radial-gradient(circle at 15% 20%, rgba(225, 29, 72, 0.14) 0%, transparent 45%),
+                radial-gradient(circle at 85% 80%, rgba(138, 43, 226, 0.16) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(255, 0, 127, 0.06) 0%, transparent 60%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Neon Glow Utilities */
+        .glow-pink {
+            box-shadow: 0 0 20px rgba(255, 0, 127, 0.4), inset 0 0 12px rgba(255, 0, 127, 0.2);
+        }
+        .glow-purple {
+            box-shadow: 0 0 20px rgba(138, 43, 226, 0.45), inset 0 0 12px rgba(138, 43, 226, 0.2);
+        }
+        .glow-crimson {
+            box-shadow: 0 0 25px rgba(225, 29, 72, 0.5), inset 0 0 12px rgba(225, 29, 72, 0.25);
+        }
+        .text-glow {
+            text-shadow: 0 0 12px rgba(255, 0, 127, 0.7);
+        }
+
+        /* 3D Card Flip Animation */
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+        .transform-style-3d {
+            transform-style: preserve-3d;
+            transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .backface-hidden {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+        .rotate-y-180 {
+            transform: rotateY(180deg);
+        }
+
+        /* Active Player Pulse */
+        @keyframes pulse-border {
+            0%, 100% { border-color: #ff007f; box-shadow: 0 0 15px rgba(255, 0, 127, 0.6); }
+            50% { border-color: #a855f7; box-shadow: 0 0 28px rgba(168, 85, 247, 0.85); }
+        }
+        .active-player-ring {
+            animation: pulse-border 2s infinite;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0d0618;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #db2777;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="text-pink-50 font-sans antialiased selection:bg-pink-600 selection:text-white pb-12">
+
+    <!-- Top Navigation & Header -->
+    <header class="border-b border-pink-950/60 bg-black/40 backdrop-blur-md sticky top-0 z-30">
+        <div class="max-w-5xl mx-auto px-4 py-3.5 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-600 to-purple-800 flex items-center justify-center glow-pink">
+                    <i class="fa-solid fa-fire-flame-curved text-white text-lg"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="font-serif italic text-xl sm:text-2xl font-bold tracking-wider bg-gradient-to-r from-pink-400 via-rose-400 to-purple-400 bg-clip-text text-transparent">
+                            After Hours
+                        </h1>
+                        <span class="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full bg-rose-950/90 border border-rose-500/40 text-rose-300 font-semibold">
+                            18+ Late Night
+                        </span>
+                    </div>
+                    <p class="text-xs text-purple-300/70">Remote Edition • Ava, Nidhi & Shity</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 sm:gap-3">
+                <button id="soundToggleBtn" onclick="toggleSound()" class="p-2.5 rounded-xl bg-purple-950/50 hover:bg-purple-900/60 border border-purple-700/40 text-purple-300 transition text-xs flex items-center gap-1.5" title="Toggle Sound">
+                    <i id="soundIcon" class="fa-solid fa-volume-high"></i>
+                </button>
+                <button onclick="openModal('customModal')" class="px-3 py-2 rounded-xl bg-purple-950/60 hover:bg-purple-900/80 border border-purple-500/40 text-purple-200 text-xs font-medium transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-plus text-pink-400"></i>
+                    <span class="hidden sm:inline">Add Custom</span>
+                </button>
+                <button onclick="openModal('deckModal')" class="px-3 py-2 rounded-xl bg-pink-950/60 hover:bg-pink-900/80 border border-pink-500/40 text-pink-200 text-xs font-medium transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-layer-group text-pink-400"></i>
+                    <span>View All 50</span>
+                </button>
+                <button onclick="resetDeck()" class="p-2.5 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 border border-rose-700/40 text-rose-300 text-xs transition" title="Reset Game & Deck">
+                    <i class="fa-solid fa-rotate-right"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-5xl mx-auto px-4 pt-6 space-y-6">
+
+        <!-- Players & Turn Selector -->
+        <section class="bg-velvetCard/80 border border-purple-900/50 rounded-2xl p-4 sm:p-5 backdrop-blur-lg shadow-2xl">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                <div>
+                    <h2 class="text-xs font-bold uppercase tracking-widest text-pink-400 flex items-center gap-2">
+                        <i class="fa-solid fa-users-viewfinder"></i> VIP Lounge Roster
+                    </h2>
+                    <p class="text-xs text-purple-300/70">Tap a player to select them or spin the bottle for a random victim</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="spinBottle()" id="spinBtn" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-pink-600 via-rose-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-semibold text-xs uppercase tracking-wider shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2 glow-pink">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Random Spin
+                    </button>
+                    <button onclick="nextTurn()" class="w-full sm:w-auto px-3.5 py-2.5 rounded-xl bg-purple-950/80 hover:bg-purple-900 border border-purple-600/40 text-purple-200 font-semibold text-xs uppercase tracking-wider transition flex items-center justify-center gap-1.5">
+                        <span>Next</span> <i class="fa-solid fa-forward-step"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 3 Player Cards Grid -->
+            <div id="playersGrid" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <!-- Populated dynamically via JS -->
+            </div>
+        </section>
+
+        <!-- Center Stage: Progress & Interactive Card Area -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+            <!-- Left Column: Controls & Stats (5 cols on lg) -->
+            <div class="lg:col-span-5 space-y-4">
+                <!-- Current Turn Banner -->
+                <div class="bg-gradient-to-br from-purple-950/70 via-velvetCard to-rose-950/50 border border-pink-500/30 rounded-2xl p-5 text-center relative overflow-hidden">
+                    <div class="text-xs uppercase tracking-widest text-pink-400/90 font-semibold mb-1">In The Hot Seat</div>
+                    <div id="currentTurnTitle" class="text-3xl font-serif italic font-bold text-white text-glow mb-1">Ava</div>
+                    <div id="targetPartnerSubtitle" class="text-xs text-purple-300">
+                        Paired target for dares: <span class="text-pink-400 font-semibold">Nidhi</span>
+                    </div>
+
+                    <!-- Action Buttons: Truth or Dare -->
+                    <div class="grid grid-cols-2 gap-3 mt-5">
+                        <button onclick="drawCard('truth')" class="group relative py-4 px-4 rounded-xl bg-gradient-to-br from-purple-700 to-indigo-900 hover:from-purple-600 hover:to-indigo-800 border border-purple-400/40 shadow-lg transition transform hover:-translate-y-0.5 active:scale-95 flex flex-col items-center gap-1 glow-purple">
+                            <i class="fa-solid fa-mask text-2xl text-purple-200 group-hover:scale-110 transition"></i>
+                            <span class="font-black tracking-wider text-base text-white">TRUTH</span>
+                            <span class="text-[11px] text-purple-200/80" id="truthRemainingBadge">25 Left</span>
+                        </button>
+
+                        <button onclick="drawCard('dare')" class="group relative py-4 px-4 rounded-xl bg-gradient-to-br from-rose-600 to-pink-800 hover:from-rose-500 hover:to-pink-700 border border-pink-400/40 shadow-lg transition transform hover:-translate-y-0.5 active:scale-95 flex flex-col items-center gap-1 glow-crimson">
+                            <i class="fa-solid fa-fire text-2xl text-rose-200 group-hover:scale-110 transition"></i>
+                            <span class="font-black tracking-wider text-base text-white">DARE</span>
+                            <span class="text-[11px] text-rose-100/80" id="dareRemainingBadge">25 Left</span>
+                        </button>
+                    </div>
+
+                    <!-- Wildcard / Mystery Draw -->
+                    <button onclick="drawRandomType()" class="w-full mt-3 py-2.5 rounded-xl bg-black/50 hover:bg-black/70 border border-pink-500/30 text-xs text-pink-300 font-medium tracking-wide transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-dice text-pink-400"></i> Fate Decides (Random Truth or Dare)
+                    </button>
+                </div>
+
+                <!-- Heat Level & Remote Rules -->
+                <div class="bg-velvetCard/70 border border-purple-900/40 rounded-2xl p-4 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold uppercase tracking-wider text-purple-300 flex items-center gap-1.5">
+                            <i class="fa-solid fa-temperature-Full text-rose-500"></i> Deck Progress
+                        </span>
+                        <span id="totalDrawnText" class="text-xs text-pink-400 font-semibold">0 / 50 Drawn</span>
+                    </div>
+                    <!-- Progress Bars -->
+                    <div class="space-y-2">
+                        <div>
+                            <div class="flex justify-between text-[11px] text-purple-300 mb-1">
+                                <span>Spicy Truths</span>
+                                <span id="truthProgressText">0 / 25</span>
+                            </div>
+                            <div class="w-full h-2 bg-purple-950 rounded-full overflow-hidden">
+                                <div id="truthProgressBar" class="h-full bg-gradient-to-r from-purple-500 to-indigo-400 transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-[11px] text-rose-300 mb-1">
+                                <span>Remote Dares</span>
+                                <span id="dareProgressText">0 / 25</span>
+                            </div>
+                            <div class="w-full h-2 bg-rose-950 rounded-full overflow-hidden">
+                                <div id="dareProgressBar" class="h-full bg-gradient-to-r from-rose-500 to-pink-500 transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Penalty Rule Box -->
+                    <div class="p-3 rounded-xl bg-black/40 border border-rose-900/40 text-xs text-purple-200/80 leading-relaxed">
+                        <span class="text-rose-400 font-semibold"><i class="fa-solid fa-wine-glass-empty mr-1"></i> Late Night Rule:</span> 
+                        Refusing a prompt adds a <strong>Skip Penalty</strong>. Every 2 skips = the group chooses a custom remote punishment or camera-on forfeit!
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: 3D Flip Card Stage (7 cols on lg) -->
+            <div class="lg:col-span-7">
+                <div class="perspective-1000 w-full h-[380px] sm:h-[420px]">
+                    <div id="cardInner" class="w-full h-full relative transform-style-3d">
+                        
+                        <!-- Card Front (Idle / Ready State) -->
+                        <div class="absolute inset-0 w-full h-full backface-hidden rounded-3xl bg-gradient-to-br from-velvetCard via-[#1e0b30] to-[#12041c] border-2 border-purple-500/30 p-6 sm:p-8 flex flex-col items-center justify-center text-center shadow-2xl">
+                            <div class="w-20 h-20 rounded-full bg-gradient-to-tr from-pink-600/30 to-purple-600/30 border border-pink-500/40 flex items-center justify-center mb-4 glow-pink">
+                                <i class="fa-solid fa-lips text-4xl text-pink-400"></i>
+                            </div>
+                            <h3 class="font-serif italic text-2xl sm:text-3xl text-white mb-2">Ready to Confess?</h3>
+                            <p class="text-sm text-purple-300/80 max-w-md">
+                                Select <strong class="text-purple-400">TRUTH</strong> or <strong class="text-rose-400">DARE</strong> on the left to draw a card for <span id="idlePlayerName" class="text-pink-400 font-semibold">Ava</span>.
+                            </p>
+                            <div class="mt-6 flex items-center gap-3 text-xs text-purple-400/70">
+                                <span><i class="fa-solid fa-video mr-1"></i> Video Call</span>
+                                <span>•</span>
+                                <span><i class="fa-solid fa-microphone mr-1"></i> Voice Note</span>
+                                <span>•</span>
+                                <span><i class="fa-solid fa-comment-dots mr-1"></i> Live Chat</span>
+                            </div>
+                        </div>
+
+                        <!-- Card Back (Active Prompt State) -->
+                        <div id="cardBack" class="absolute inset-0 w-full h-full backface-hidden rotate-y-180 rounded-3xl bg-gradient-to-br from-[#1f0826] via-[#13061f] to-[#290617] border-2 border-pink-500/60 p-6 sm:p-8 flex flex-col justify-between shadow-2xl glow-pink">
+                            
+                            <!-- Card Header -->
+                            <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                                <div class="flex items-center gap-2">
+                                    <span id="cardTypeBadge" class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest bg-rose-600 text-white">
+                                        DARE
+                                    </span>
+                                    <span id="cardNumberBadge" class="text-xs text-purple-300 font-mono">
+                                        #14
+                                    </span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span id="cardPlayerTag" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-white/10 text-pink-200">
+                                        For Ava
+                                    </span>
+                                    <button onclick="copyPrompt()" class="p-1.5 rounded-lg bg-white/5 hover:bg-white/15 text-purple-200 text-xs transition" title="Copy prompt to paste in chat">
+                                        <i class="fa-regular fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Card Body (Prompt Text) -->
+                            <div class="my-auto py-4 flex flex-col items-center justify-center text-center">
+                                <p id="cardPromptText" class="text-lg sm:text-2xl font-semibold text-white leading-relaxed tracking-wide">
+                                    Prompt will appear here...
+                                </p>
+                                <div id="cardTimerBox" class="hidden mt-4 items-center gap-2 px-4 py-1.5 rounded-full bg-rose-950/90 border border-rose-500/50 text-rose-200 text-xs font-mono">
+                                    <i class="fa-regular fa-clock animate-spin"></i>
+                                    <span id="timerDisplay">00:30</span>
+                                    <button onclick="startTimer(30)" class="ml-2 underline text-pink-400 hover:text-pink-300">Start 30s</button>
+                                </div>
+                            </div>
+
+                            <!-- Card Footer: Complete or Skip -->
+                            <div class="grid grid-cols-2 gap-3 pt-3 border-t border-white/10">
+                                <button onclick="handleOutcome('skip')" class="py-2.5 px-4 rounded-xl bg-rose-950/60 hover:bg-rose-900/80 border border-rose-600/40 text-rose-200 font-semibold text-xs uppercase tracking-wider transition flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-ban"></i> Chicken Out (+1 Skip)
+                                </button>
+                                <button onclick="handleOutcome('complete')" class="py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold text-xs uppercase tracking-wider shadow-lg transition flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-check-double"></i> Completed (+1 Pt)
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity Log -->
+                <div class="mt-4 bg-velvetCard/60 border border-purple-900/40 rounded-2xl p-3.5 flex items-center justify-between text-xs text-purple-300">
+                    <div class="flex items-center gap-2 truncate">
+                        <span class="w-2 h-2 rounded-full bg-pink-500 animate-ping"></span>
+                        <span id="activityLog" class="truncate">Welcome to the lounge! Select a player or spin to start.</span>
+                    </div>
+                    <button onclick="flipBackToIdle()" class="text-pink-400 hover:underline shrink-0 ml-2">Flip Card</button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 px-4 py-3 rounded-xl bg-gradient-to-r from-pink-600 to-purple-700 text-white text-xs font-semibold shadow-2xl flex items-center gap-2 pointer-events-none">
+        <i class="fa-solid fa-sparkles"></i>
+        <span id="toastMsg">Copied to clipboard!</span>
+    </div>
+
+    <!-- Modal 1: View Full 50 Deck (25 Truths & 25 Dares) -->
+    <div id="deckModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-velvetCard border border-pink-500/40 rounded-3xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="p-4 sm:p-5 border-b border-purple-900/60 flex items-center justify-between">
+                <div>
+                    <h3 class="font-serif italic text-xl text-white">Full Late-Night Deck (25 Truths & 25 Dares)</h3>
+                    <p class="text-xs text-purple-300/70">Click any question to launch it immediately for the active player</p>
+                </div>
+                <button onclick="closeModal('deckModal')" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Tabs -->
+            <div class="flex border-b border-purple-900/60 bg-black/40 px-5 pt-2 gap-4">
+                <button onclick="switchDeckTab('truths')" id="tabTruths" class="pb-2.5 text-xs font-bold uppercase tracking-wider border-b-2 border-purple-400 text-purple-300">
+                    25 Spicy Truths
+                </button>
+                <button onclick="switchDeckTab('dares')" id="tabDares" class="pb-2.5 text-xs font-bold uppercase tracking-wider border-b-2 border-transparent text-gray-400 hover:text-rose-300">
+                    25 Remote Dares
+                </button>
+            </div>
+
+            <!-- List Content -->
+            <div id="deckListContainer" class="p-4 sm:p-5 overflow-y-auto space-y-2.5 flex-1">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 2: Add Custom Prompt -->
+    <div id="customModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-velvetCard border border-purple-500/40 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 class="font-serif italic text-xl text-white">Add Custom Spicy Prompt</h3>
+                <button onclick="closeModal('customModal')" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <p class="text-xs text-purple-300/80">
+                Tip: Use <code class="px-1.5 py-0.5 rounded bg-purple-950 text-pink-400">{partner}</code> in your text to automatically insert another player's name!
+            </p>
+            <div class="space-y-3">
+                <div>
+                    <label class="text-xs uppercase font-bold text-purple-300 block mb-1">Type</label>
+                    <select id="customType" class="w-full rounded-xl bg-black/60 border border-purple-700/50 px-3 py-2.5 text-sm text-white focus:outline-none focus:border-pink-500">
+                        <option value="truth">Spicy Truth</option>
+                        <option value="dare">Remote Dare</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs uppercase font-bold text-purple-300 block mb-1">Prompt Text</label>
+                    <textarea id="customText" rows="3" placeholder="e.g., Send {partner} a voice note confessing your wildest dream about them..." class="w-full rounded-xl bg-black/60 border border-purple-700/50 p-3 text-sm text-white focus:outline-none focus:border-pink-500"></textarea>
+                </div>
+                <button onclick="addCustomPrompt()" class="w-full py-3 rounded-xl bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-bold text-xs uppercase tracking-wider shadow-lg">
+                    Add to Deck
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // PLAYERS & GAME STATE
+        // ==========================================
+        const players = [
+            { id: 0, name: 'Ava', avatar: 'fa-crown', color: 'from-pink-500 to-rose-600', score: 0, skips: 0 },
+            { id: 1, name: 'Nidhi', avatar: 'fa-fire-flame-simple', color: 'from-purple-500 to-indigo-600', score: 0, skips: 0 },
+            { id: 2, name: 'Shity', avatar: 'fa-bolt-lightning', color: 'from-rose-500 to-amber-600', score: 0, skips: 0 }
+        ];
+
+        let currentPlayerIndex = 0;
+        let currentPartnerIndex = 1;
+        let soundEnabled = true;
+        let activeCard = null;
+        let currentDeckModalTab = 'truths';
+        let countdownInterval = null;
+
+        // ==========================================
+        // 25 SPICY REMOTE TRUTHS & 25 REMOTE DARES
+        // Tailored for Ava, Nidhi & Shity
+        // ==========================================
+        const initialTruths = [
+            "Between Ava, Nidhi, and Shity, who would you pick for a secret late-night hookup if no one ever found out?",
+            "What is the most seductive or risky photo currently sitting in your camera roll, and would you ever send it to {partner}?",
+            "Have you ever fantasized about someone on this call? Describe the exact scenario without naming them!",
+            "Rate your current attraction or curiosity toward {partner} on a scale of 1 to 10—be brutally honest.",
+            "What is your ultimate hidden turn-on that would shock everyone in this group?",
+            "What is the wildest thing you’ve ever done over a video call, voice call, or late-night text?",
+            "If you were locked in a hotel suite with {partner} for 24 hours with zero rules, what happens first?",
+            "Which player in this trio (Ava, Nidhi, or Shity) has the most attractive voice when they whisper?",
+            "What are you wearing right now, and what is the least amount of clothing you've ever worn while on a call with friends?",
+            "What is the dirtiest or boldest dream you've ever had about someone you know in real life?",
+            "Between the other two players in this lounge, who would you kiss right now and who would you tease for a week?",
+            "What is the fastest way someone can make you lose complete control in the bedroom?",
+            "Have you ever stalked {partner}’s photos late at night? Which photo of theirs do you find the hottest?",
+            "What is a secret fantasy you’ve been too shy to ask a partner to try?",
+            "Who among Ava, Nidhi, and Shity do you think has the highest freak level behind closed doors, and why?",
+            "What is the most scandalous message you’ve ever sent to the wrong person by mistake?",
+            "Where is the craziest, riskiest place you’ve ever hooked up or made out with someone?",
+            "If {partner} dared you to meet up in person tonight with no questions asked, how far would you let things go?",
+            "What part of your body do you love having kissed or touched the most?",
+            "Have you ever faked excitement or pleasure on a date or hookup? Spill the story.",
+            "If you had to rank Ava, Nidhi, and Shity from 'most innocent' to 'biggest heartbreaker,' what’s the exact order?",
+            "What is one thing {partner} could say or whisper to you right now that would instantly give you butterflies?",
+            "What is your biggest guilty pleasure when you are home alone after midnight?",
+            "Have you ever sent a spicy text or photo while sitting in the same room as family or coworkers?",
+            "If tonight was our last night ever talking and there were zero consequences tomorrow, what would you confess to {partner}?"
+        ];
+
+        const initialDares = [
+            "Turn your camera on (or send a voice note) and whisper {partner}’s name in the most seductive, breathy voice you can manage.",
+            "Send {partner} a private DM right now describing the first thing you’d do to them if you were alone together tonight.",
+            "Show the camera (or send a live photo of) your collarbone, jawline, or neckline while biting your lip.",
+            "Maintain unbroken, intense eye contact with the camera for 20 seconds while {partner} tries to make you blush or laugh.",
+            "Send a 10-second voice note to the group chat making your best 'late-night pleasure' sound—no laughing allowed!",
+            "Let {partner} pick one piece of clothing or accessory you have to adjust or remove (keep it legal/safe for stream!).",
+            "Read the last spicy or flirty text message on your phone out loud in a slow, dramatic bedroom voice.",
+            "Put an ice cube (or cold drink glass) against your lips and trace your neck on camera for 15 seconds.",
+            "Call {partner} 'Daddy', 'Mommy', or 'Master/Mistress' at the end of every sentence until your next turn.",
+            "Open your photo gallery, scroll with your eyes closed, and describe the photo you land on—or show it if you dare.",
+            "Demonstrate on your own hand, wrist, or a pillow how you like to kiss when things get heated.",
+            "Send {partner} a three-word private message that is guaranteed to make their heart race.",
+            "Tilt your camera down or strike your most provocative 'thirst-trap' pose for 10 seconds while the group rates it 1–10.",
+            "Close your eyes and narrate a 30-second steamy scenario starring you and {partner} on a private beach at midnight.",
+            "Let Ava, Nidhi, and Shity vote on a spicy status or bio for you to keep for the next 15 minutes.",
+            "Slowly eat or lick a snack, fruit, or drink straw on camera while maintaining deadpan eye contact with {partner}.",
+            "Confess three physical things about {partner} that you find genuinely irresistible.",
+            "Send a voice note pretending you are leaving {partner} a 2:00 AM voicemail begging them to come over.",
+            "Turn off the main room lights and light your face only with your phone screen while whispering a secret confession.",
+            "Let {partner} ask you one follow-up question to any previous Truth, and you must answer with 100% honesty.",
+            "Trace your lips slowly with your finger on camera while {partner} counts down from 10.",
+            "Text someone outside this game 'I just had the wildest dream about you' and show the group if they reply.",
+            "Do a 15-second slow-motion hair flip or silhouette stretch on camera to an imaginary slow jam.",
+            "Beg {partner} for mercy in your most convincing, dramatic tone so they don't give you a double penalty.",
+            "Give {partner} a 30-second 'virtual date pitch' explaining why a night with you would ruin them for anyone else."
+        ];
+
+        let truthsDeck = [];
+        let daresDeck = [];
+
+        // ==========================================
+        // SOUND EFFECTS (TONE.JS)
+        // ==========================================
+        function playTone(type) {
+            if (!soundEnabled || typeof Tone === 'undefined') return;
+            try {
+                const synth = new Tone.PolySynth(Tone.Synth).toDestination();
+                synth.volume.value = -10;
+                const now = Tone.now();
+                if (type === 'flip') {
+                    synth.triggerAttackRelease(["C4", "E4", "G4"], "16n", now);
+                } else if (type === 'spin') {
+                    synth.triggerAttackRelease(["A4", "C5"], "32n", now);
+                } else if (type === 'complete') {
+                    synth.triggerAttackRelease(["C4", "G4", "C5"], "8n", now);
+                } else if (type === 'skip') {
+                    synth.triggerAttackRelease(["F3", "E3"], "8n", now);
+                }
+            } catch (e) {
+                // Ignore audio context restrictions before user interaction
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const icon = document.getElementById('soundIcon');
+            icon.className = soundEnabled ? 'fa-solid fa-volume-high' : 'fa-solid fa-volume-xmark text-rose-400';
+            showToast(soundEnabled ? "Sound Effects Enabled" : "Sound Muted");
+        }
+
+        // ==========================================
+        // INITIALIZATION & DECK SETUP
+        // ==========================================
+        function initDecks() {
+            truthsDeck = initialTruths.map((text, idx) => ({ id: idx + 1, text, used: false }));
+            daresDeck = initialDares.map((text, idx) => ({ id: idx + 1, text, used: false }));
+            updateProgressUI();
+        }
+
+        function pickRandomPartner(excludeIndex) {
+            const candidates = players.map((_, i) => i).filter(i => i !== excludeIndex);
+            return candidates[Math.floor(Math.random() * candidates.length)];
+        }
+
+        function renderPlayers() {
+            const grid = document.getElementById('playersGrid');
+            grid.innerHTML = '';
+
+            players.forEach((p, idx) => {
+                const isCurrent = idx === currentPlayerIndex;
+                const isPartner = idx === currentPartnerIndex;
+
+                const card = document.createElement('div');
+                card.onclick = () => selectPlayer(idx);
+                card.className = `cursor-pointer rounded-2xl p-3.5 transition-all duration-300 border relative overflow-hidden ${
+                    isCurrent 
+                        ? 'bg-gradient-to-br from-pink-950/90 to-purple-950/90 border-pink-500 active-player-ring scale-[1.02]' 
+                        : 'bg-black/40 hover:bg-purple-950/40 border-purple-800/40 opacity-85 hover:opacity-100'
+                }`;
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-9 h-9 rounded-xl bg-gradient-to-br ${p.color} flex items-center justify-center text-white shadow-md">
+                                <i class="fa-solid ${p.avatar} text-sm"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-sm text-white flex items-center gap-1.5">
+                                    ${p.name}
+                                    ${isCurrent ? '<span class="w-2 h-2 rounded-full bg-pink-400 animate-ping"></span>' : ''}
+                                </div>
+                                <div class="text-[10px] uppercase tracking-wider ${isCurrent ? 'text-pink-300 font-semibold' : isPartner ? 'text-purple-300' : 'text-gray-400'}">
+                                    ${isCurrent ? 'Hot Seat' : isPartner ? 'Paired Target' : 'In Lounge'}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-1.5 pt-2 border-t border-white/10 text-[11px]">
+                        <div class="bg-emerald-950/50 border border-emerald-700/30 rounded-lg px-2 py-1 text-emerald-300 flex items-center justify-between">
+                            <span>Done</span>
+                            <span class="font-bold">${p.score}</span>
+                        </div>
+                        <div class="bg-rose-950/50 border border-rose-700/30 rounded-lg px-2 py-1 text-rose-300 flex items-center justify-between">
+                            <span>Skips</span>
+                            <span class="font-bold">${p.skips}</span>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+
+            // Update Hot Seat Banner
+            const currentP = players[currentPlayerIndex];
+            const partnerP = players[currentPartnerIndex];
+            document.getElementById('currentTurnTitle').textContent = currentP.name;
+            document.getElementById('idlePlayerName').textContent = currentP.name;
+            document.getElementById('targetPartnerSubtitle').innerHTML = `Paired target for dares: <span class="text-pink-400 font-semibold">${partnerP.name}</span>`;
+        }
+
+        function selectPlayer(idx) {
+            currentPlayerIndex = idx;
+            currentPartnerIndex = pickRandomPartner(idx);
+            flipBackToIdle();
+            renderPlayers();
+            logActivity(`${players[idx].name} stepped into the hot seat! Paired with ${players[currentPartnerIndex].name}.`);
+        }
+
+        function nextTurn() {
+            currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+            currentPartnerIndex = pickRandomPartner(currentPlayerIndex);
+            flipBackToIdle();
+            renderPlayers();
+            playTone('spin');
+            logActivity(`Next turn: ${players[currentPlayerIndex].name} is up!`);
+        }
+
+        function spinBottle() {
+            const spinBtn = document.getElementById('spinBtn');
+            spinBtn.disabled = true;
+            flipBackToIdle();
+
+            let ticks = 0;
+            const totalTicks = 12 + Math.floor(Math.random() * 6);
+            const interval = setInterval(() => {
+                currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+                currentPartnerIndex = pickRandomPartner(currentPlayerIndex);
+                renderPlayers();
+                playTone('spin');
+                ticks++;
+                if (ticks >= totalTicks) {
+                    clearInterval(interval);
+                    spinBtn.disabled = false;
+                    const chosen = players[currentPlayerIndex].name;
+                    const partner = players[currentPartnerIndex].name;
+                    showToast(`Spin landed on ${chosen} (Target: ${partner})!`);
+                    logActivity(`Random Spin selected ${chosen} with target ${partner}!`);
+                }
+            }, 95);
+        }
+
+        // ==========================================
+        // CARD DRAWING & FLIPPING
+        // ==========================================
+        function formatPromptText(rawText) {
+            const partnerName = players[currentPartnerIndex].name;
+            return rawText.replace(/\{partner\}/g, partnerName);
+        }
+
+        function drawCard(type, specificId = null) {
+            const deck = type === 'truth' ? truthsDeck : daresDeck;
+            let chosenItem = null;
+
+            if (specificId !== null) {
+                chosenItem = deck.find(item => item.id === specificId);
+            } else {
+                let available = deck.filter(item => !item.used);
+                if (available.length === 0) {
+                    // Auto-reshuffle if all 25 have been played
+                    deck.forEach(item => item.used = false);
+                    available = deck;
+                    showToast(`All 25 ${type.toUpperCase()}S completed! Reshuffling deck.`);
+                }
+                chosenItem = available[Math.floor(Math.random() * available.length)];
+            }
+
+            if (!chosenItem) return;
+            chosenItem.used = true;
+            // Re-roll partner each draw so every question feels fresh
+            currentPartnerIndex = pickRandomPartner(currentPlayerIndex);
+            renderPlayers();
+
+            activeCard = {
+                type,
+                id: chosenItem.id,
+                formattedText: formatPromptText(chosenItem.text)
+            };
+
+            populateCardBack(activeCard);
+            updateProgressUI();
+
+            // Trigger 3D Flip
+            const cardInner = document.getElementById('cardInner');
+            cardInner.classList.add('rotate-y-180');
+            playTone('flip');
+
+            const currentName = players[currentPlayerIndex].name;
+            logActivity(`${currentName} drew ${type.toUpperCase()} #${chosenItem.id}`);
+        }
+
+        function drawRandomType() {
+            const randomType = Math.random() < 0.5 ? 'truth' : 'dare';
+            drawCard(randomType);
+        }
+
+        function populateCardBack(card) {
+            const typeBadge = document.getElementById('cardTypeBadge');
+            const numBadge = document.getElementById('cardNumberBadge');
+            const playerTag = document.getElementById('cardPlayerTag');
+            const promptEl = document.getElementById('cardPromptText');
+            const timerBox = document.getElementById('cardTimerBox');
+            const cardBack = document.getElementById('cardBack');
+
+            clearInterval(countdownInterval);
+            document.getElementById('timerDisplay').textContent = '00:30';
+
+            if (card.type === 'truth') {
+                typeBadge.textContent = 'SPICY TRUTH';
+                typeBadge.className = 'px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest bg-purple-600 text-white shadow';
+                cardBack.className = 'absolute inset-0 w-full h-full backface-hidden rotate-y-180 rounded-3xl bg-gradient-to-br from-[#1b0a33] via-[#110622] to-[#240a38] border-2 border-purple-500/70 p-6 sm:p-8 flex flex-col justify-between shadow-2xl glow-purple';
+                timerBox.classList.add('hidden');
+                timerBox.classList.remove('flex');
+            } else {
+                typeBadge.textContent = 'REMOTE DARE';
+                typeBadge.className = 'px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest bg-rose-600 text-white shadow';
+                cardBack.className = 'absolute inset-0 w-full h-full backface-hidden rotate-y-180 rounded-3xl bg-gradient-to-br from-[#2b0718] via-[#170514] to-[#2e0722] border-2 border-rose-500/70 p-6 sm:p-8 flex flex-col justify-between shadow-2xl glow-crimson';
+                timerBox.classList.remove('hidden');
+                timerBox.classList.add('flex');
+            }
+
+            numBadge.textContent = `#${card.id} / ${card.type === 'truth' ? truthsDeck.length : daresDeck.length}`;
+            playerTag.textContent = `${players[currentPlayerIndex].name} ➔ ${players[currentPartnerIndex].name}`;
+            promptEl.textContent = card.formattedText;
+        }
+
+        function flipBackToIdle() {
+            clearInterval(countdownInterval);
+            const cardInner = document.getElementById('cardInner');
+            cardInner.classList.remove('rotate-y-180');
+        }
+
+        function handleOutcome(status) {
+            const p = players[currentPlayerIndex];
+            if (status === 'complete') {
+                p.score += 1;
+                playTone('complete');
+                showToast(`${p.name} completed the challenge! (+1 Pt)`);
+                logActivity(`${p.name} completed ${activeCard ? activeCard.type.toUpperCase() : 'challenge'}! Moving to next turn.`);
+            } else {
+                p.skips += 1;
+                playTone('skip');
+                if (p.skips % 2 === 0) {
+                    showToast(`🚨 ${p.name} hit ${p.skips} skips! Penalty Forfeit Time!`);
+                } else {
+                    showToast(`${p.name} chickened out! (+1 Skip)`);
+                }
+                logActivity(`${p.name} took a Skip Penalty (${p.skips} total skips).`);
+            }
+            nextTurn();
+        }
+
+        // ==========================================
+        // TIMER, PROGRESS & UTILITIES
+        // ==========================================
+        function startTimer(seconds) {
+            clearInterval(countdownInterval);
+            let remaining = seconds;
+            const display = document.getElementById('timerDisplay');
+            
+            countdownInterval = setInterval(() => {
+                remaining--;
+                const secs = remaining < 10 ? `0${remaining}` : remaining;
+                display.textContent = `00:${secs}`;
+                if (remaining <= 0) {
+                    clearInterval(countdownInterval);
+                    display.textContent = "TIME'S UP!";
+                    playTone('complete');
+                    showToast("⏰ 30 Seconds Up!");
+                }
+            }, 1000);
+        }
+
+        function updateProgressUI() {
+            const usedTruths = truthsDeck.filter(t => t.used).length;
+            const totalTruths = truthsDeck.length;
+            const usedDares = daresDeck.filter(d => d.used).length;
+            const totalDares = daresDeck.length;
+
+            document.getElementById('truthRemainingBadge').textContent = `${totalTruths - usedTruths} Left`;
+            document.getElementById('dareRemainingBadge').textContent = `${totalDares - usedDares} Left`;
+
+            document.getElementById('truthProgressText').textContent = `${usedTruths} / ${totalTruths}`;
+            document.getElementById('dareProgressText').textContent = `${usedDares} / ${totalDares}`;
+            document.getElementById('totalDrawnText').textContent = `${usedTruths + usedDares} / ${totalTruths + totalDares} Drawn`;
+
+            document.getElementById('truthProgressBar').style.width = `${(usedTruths / totalTruths) * 100}%`;
+            document.getElementById('dareProgressBar').style.width = `${(usedDares / totalDares) * 100}%`;
+        }
+
+        function copyPrompt() {
+            if (!activeCard) return;
+            const textToCopy = `🔥 [${activeCard.type.toUpperCase()} for ${players[currentPlayerIndex].name}]: ${activeCard.formattedText}`;
+            const tempInput = document.createElement('textarea');
+            tempInput.value = textToCopy;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            showToast("Copied prompt to clipboard!");
+        }
+
+        function resetDeck() {
+            players.forEach(p => { p.score = 0; p.skips = 0; });
+            initDecks();
+            flipBackToIdle();
+            renderPlayers();
+            showToast("Game & all 50 cards reset!");
+            logActivity("Deck and scoreboard have been freshly reset.");
+        }
+
+        function logActivity(msg) {
+            document.getElementById('activityLog').textContent = msg;
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').textContent = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2600);
+        }
+
+        // ==========================================
+        // MODALS: VIEW ALL 50 & ADD CUSTOM
+        // ==========================================
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+            if (id === 'deckModal') {
+                renderDeckModalList();
+            }
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function switchDeckTab(tab) {
+            currentDeckModalTab = tab;
+            const tabTruths = document.getElementById('tabTruths');
+            const tabDares = document.getElementById('tabDares');
+
+            if (tab === 'truths') {
+                tabTruths.className = 'pb-2.5 text-xs font-bold uppercase tracking-wider border-b-2 border-purple-400 text-purple-300';
+                tabDares.className = 'pb-2.5 text-xs font-bold uppercase tracking-wider border-b-2 border-transparent text-gray-400 hover:text-rose-300';
+            } else {
+                tabDares.className = 'pb-2.5 text-xs font-bold uppercase tracking-wider border-b-2 border-rose-500 text-rose-300';
+                tabTruths.className = 'pb-2.5 text-xs font-bold uppercase tracking-wider border-b-2 border-transparent text-gray-400 hover:text-purple-300';
+            }
+            renderDeckModalList();
+        }
+
+        function renderDeckModalList() {
+            const container = document.getElementById('deckListContainer');
+            container.innerHTML = '';
+            const isTruth = currentDeckModalTab === 'truths';
+            const list = isTruth ? truthsDeck : daresDeck;
+
+            list.forEach(item => {
+                const row = document.createElement('div');
+                row.onclick = () => {
+                    closeModal('deckModal');
+                    drawCard(isTruth ? 'truth' : 'dare', item.id);
+                };
+                row.className = `p-3.5 rounded-xl border transition cursor-pointer flex items-center justify-between gap-3 ${
+                    item.used 
+                        ? 'bg-black/30 border-purple-900/30 opacity-50 hover:opacity-90' 
+                        : 'bg-purple-950/30 hover:bg-purple-900/40 border-purple-700/40'
+                }`;
+
+                row.innerHTML = `
+                    <div class="flex items-start gap-3">
+                        <span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold ${isTruth ? 'bg-purple-900 text-purple-200' : 'bg-rose-900 text-rose-200'}">
+                            #${item.id}
+                        </span>
+                        <p class="text-xs sm:text-sm text-pink-50">${formatPromptText(item.text)}</p>
+                    </div>
+                    <span class="text-[10px] uppercase tracking-wider shrink-0 px-2 py-1 rounded ${item.used ? 'bg-gray-800 text-gray-400' : 'bg-pink-600/30 text-pink-300'}">
+                        ${item.used ? 'Played' : 'Play Now'}
+                    </span>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function addCustomPrompt() {
+            const type = document.getElementById('customType').value;
+            const text = document.getElementById('customText').value.trim();
+            if (!text) {
+                showToast("Please enter a prompt first!");
+                return;
+            }
+
+            if (type === 'truth') {
+                truthsDeck.push({ id: truthsDeck.length + 1, text, used: false });
+            } else {
+                daresDeck.push({ id: daresDeck.length + 1, text, used: false });
+            }
+
+            document.getElementById('customText').value = '';
+            closeModal('customModal');
+            updateProgressUI();
+            showToast(`Added new custom ${type.toUpperCase()}!`);
+        }
+
+        // Start App on Load
+        window.onload = function() {
+            initDecks();
+            renderPlayers();
+        };
+    </script>
+</body>
+</html>
